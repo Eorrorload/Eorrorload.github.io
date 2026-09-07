@@ -29,7 +29,7 @@
     --ease: cubic-bezier(.16, 1, .3, 1);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
   body {
     background: var(--bg); color: var(--text);
     font-family: var(--font-body); line-height: 1.8;
@@ -454,10 +454,13 @@
   footer .f-logo b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
   footer .copy { font-size: 12.5px; color: var(--text-faint); letter-spacing: .4px; }
 
-  /* ---------- reveal ---------- */
-  .js .rv { opacity: 0; transform: translateY(28px); filter: blur(4px); transition: opacity .8s var(--ease), transform .8s var(--ease), filter .8s var(--ease); }
+  /* ---------- reveal(滚动进入视口时绽放) ---------- */
+  .js .rv { opacity: 0; transform: translateY(42px) scale(.965); filter: blur(8px); transition: opacity .9s var(--ease), transform .9s var(--ease), filter .9s var(--ease); will-change: transform, opacity; }
   .js .rv.on { opacity: 1; transform: none; filter: none; }
   .js .rv.d1 { transition-delay: .08s; } .js .rv.d2 { transition-delay: .16s; } .js .rv.d3 { transition-delay: .24s; }
+
+  /* 滚动视差漂浮光球 */
+  .p-orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: -1; will-change: transform; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -618,6 +621,8 @@
 
 <!-- ============ 特性 ============ -->
 <section id="features">
+  <div class="p-orb" data-speed="0.18" style="top:140px; right:-120px; width:380px; height:380px; background: radial-gradient(circle, rgba(125,240,195,.16), transparent 62%);" aria-hidden="true"></div>
+  <div class="p-orb" data-speed="0.28" style="bottom:-60px; left:-140px; width:420px; height:420px; background: radial-gradient(circle, rgba(147,165,253,.18), transparent 62%);" aria-hidden="true"></div>
   <div class="sec-head">
     <div class="sec-tag rv">FEATURES</div>
     <h2 class="rv">为玩家而生的 Mod 工坊</h2>
@@ -659,6 +664,7 @@
 
 <!-- ============ 工作方式 ============ -->
 <section id="how">
+  <div class="p-orb" data-speed="0.2" style="top:120px; left:-120px; width:360px; height:360px; background: radial-gradient(circle, rgba(230,168,213,.14), transparent 62%);" aria-hidden="true"></div>
   <div class="sec-head">
     <div class="sec-tag rv">HOW IT WORKS</div>
     <h2 class="rv">三步做出你的 Mod</h2>
@@ -685,6 +691,7 @@
 
 <!-- ============ 玩法灵感 ============ -->
 <section id="scenarios">
+  <div class="p-orb" data-speed="0.24" style="bottom:-80px; right:-120px; width:400px; height:400px; background: radial-gradient(circle, rgba(147,165,253,.16), transparent 62%);" aria-hidden="true"></div>
   <div class="sec-head">
     <div class="sec-tag rv">SCENARIOS</div>
     <h2 class="rv">玩家们的 Mod 灵感</h2>
@@ -723,20 +730,30 @@
   document.documentElement.classList.add('js');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // 滚动渐显
-  const io = new IntersectionObserver(es => {
-    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } });
-  }, { threshold: .08 });
-  document.querySelectorAll('.rv').forEach(el => io.observe(el));
-  setTimeout(() => document.querySelectorAll('.rv').forEach(el => el.classList.add('on')), 1600);
+  // 滚动渐显:元素进入视口才绽放(不再用定时器把所有内容一次性点亮,否则滚动时没有动画)
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => {
+      es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } });
+    }, { threshold: .1, rootMargin: '0px 0px -6% 0px' });
+    document.querySelectorAll('.rv').forEach(el => io.observe(el));
+  } else {
+    document.querySelectorAll('.rv').forEach(el => el.classList.add('on'));
+  }
 
-  // 导航栏滚动状态 + 顶部进度条
+  // 导航栏滚动状态 + 顶部进度条 + 滚动视差
   const navEl = document.querySelector('nav');
   const bar = document.querySelector('.progress');
+  const auri = document.querySelector('.auri');
+  const pOrbs = [...document.querySelectorAll('.p-orb')];
+  const parallax = () => {
+    if (auri) auri.style.transform = `translateY(${scrollY * .22}px)`;
+    pOrbs.forEach(o => o.style.transform = `translateY(${scrollY * parseFloat(o.dataset.speed)}px)`);
+  };
   addEventListener('scroll', () => {
     navEl.classList.toggle('scrolled', scrollY > 12);
     const max = document.documentElement.scrollHeight - innerHeight;
     bar.style.width = (max > 0 ? (scrollY / max) * 100 : 0) + '%';
+    if (!reduced) parallax();
   }, { passive: true });
 
   // 光标光晕 + 极光层鼠标视差
