@@ -157,6 +157,10 @@
   }
   @keyframes caret { 50% { opacity: 0; } }
 
+  /* 首屏元素错峰入场 */
+  .js .h-anim { opacity: 0; animation: heroIn .95s var(--ease) forwards; animation-delay: var(--d, 0s); }
+  @keyframes heroIn { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+
   .hero .sub {
     max-width: 640px; margin: 0 auto 44px;
     font-size: clamp(15.5px, 1.9vw, 18px); color: var(--text-dim); line-height: 2;
@@ -197,13 +201,79 @@
   .stats .sep { width: 1px; height: 42px; background: var(--border); }
 
   .scroll-hint {
-    position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+    position: static; margin: 46px auto 0;
     display: flex; flex-direction: column; align-items: center; gap: 8px;
     color: var(--text-faint); font-size: 11px; letter-spacing: 2px;
   }
   .scroll-hint i { width: 16px; height: 24px; border: 1px solid var(--hairline); border-radius: 10px; position: relative; }
   .scroll-hint i::after { content: ""; position: absolute; top: 5px; left: 50%; width: 2px; height: 5px; margin-left: -1px; background: var(--mint); border-radius: 2px; animation: wheel 1.8s var(--ease) infinite; }
   @keyframes wheel { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+
+  /* ---------- hero 工作台 ---------- */
+  .workspace {
+    width: 100%; max-width: 900px; margin: 52px auto 6px; text-align: left;
+    background: rgba(8,10,17,.6); border: 1px solid var(--hairline); border-radius: 18px;
+    overflow: hidden; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 50px 130px rgba(0,0,0,.55), 0 0 110px rgba(147,165,253,.05);
+  }
+  .ws-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 18px; background: rgba(255,255,255,.02); border-bottom: 1px solid var(--border);
+  }
+  .ws-dots { display: flex; gap: 5px; }
+  .ws-dots i { width: 10px; height: 10px; border-radius: 50%; opacity: .85; }
+  .ws-dots i:nth-child(1) { background: #ff5f57; }
+  .ws-dots i:nth-child(2) { background: #febc2e; }
+  .ws-dots i:nth-child(3) { background: #28c840; }
+  .ws-title { font-size: 12.5px; color: var(--text); letter-spacing: .3px; font-weight: 600; }
+  .ws-pill {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--mint); border: 1px solid rgba(125,240,195,.25);
+    padding: 3px 10px; border-radius: 999px; letter-spacing: 1px;
+  }
+  .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 8px var(--mint); animation: pulse 1.6s infinite; }
+  .ws-body { display: grid; grid-template-columns: 250px 1fr; }
+  .ws-goal { padding: 22px 20px; border-right: 1px solid var(--border); background: rgba(255,255,255,.015); }
+  .goal-tag { font-family: var(--font-display); font-size: 10.5px; letter-spacing: 3px; color: var(--indigo); margin-bottom: 8px; }
+  .goal-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .goal-meta { font-size: 12px; color: var(--text-dim); margin-bottom: 16px; font-variant-numeric: tabular-nums; }
+  .goal-meta .gprog { color: var(--mint); font-weight: 700; }
+  .ws-goal ul { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+  .ws-goal li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--text-faint); transition: color .4s, opacity .4s; }
+  .ws-goal li i { width: 16px; height: 16px; flex: none; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-style: normal; background: rgba(255,255,255,.06); color: var(--text-faint); }
+  .ws-goal li.ok { color: var(--text); }
+  .ws-goal li.ok i { background: var(--grad); color: #07110c; }
+  .ws-log { padding: 16px 20px; }
+  .ws-log-inner { display: flex; flex-direction: column; gap: 9px; min-height: 150px; font-family: var(--font-display); font-size: 12.8px; }
+  .ws-line { display: flex; gap: 10px; align-items: baseline; color: var(--text-dim); line-height: 1.6; opacity: 0; transform: translateY(4px); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+  .ws-line.on { opacity: 1; transform: none; }
+  .ws-line .pre { flex: none; width: 16px; font-weight: 700; color: var(--indigo); }
+  .ws-line.cm { color: var(--text-faint); }
+  .ws-line.ok { color: var(--text); }
+  .ws-line.ok .pre { color: var(--mint); }
+  .ws-line.done { color: var(--mint); font-weight: 700; }
+  .ws-line.done .pre { color: var(--mint); }
+  .ws-line .chip { margin-left: auto; font-size: 11px; color: var(--indigo); border: 1px solid rgba(147,165,253,.3); padding: 1px 8px; border-radius: 6px; background: rgba(147,165,253,.05); }
+  .ws-line.ok .chip { color: var(--mint); border-color: rgba(125,240,195,.3); background: rgba(125,240,195,.05); }
+  .ws-live { display: inline-flex; gap: 5px; align-items: center; padding: 2px 0; }
+  .ws-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); animation: blink 1.2s infinite; }
+  .ws-live i:nth-child(2) { animation-delay: .2s; } .ws-live i:nth-child(3) { animation-delay: .4s; }
+  .ws-foot {
+    display: flex; align-items: center; gap: 12px; padding: 13px 20px;
+    border-top: 1px solid var(--border); background: rgba(255,255,255,.015);
+    font-size: 12px; color: var(--text-dim);
+  }
+  .ws-foot .ws-files { margin-right: auto; }
+  .ws-add { color: var(--mint); font-weight: 700; }
+  .ws-del { color: var(--rose); font-weight: 700; }
+  .ws-min { color: var(--text-faint); }
+  .ws-foot .ws-undo { color: var(--text); border: 1px solid var(--hairline); padding: 2px 10px; border-radius: 6px; }
+  @media (max-width: 720px) {
+    .ws-body { grid-template-columns: 1fr; }
+    .ws-goal { border-right: none; border-bottom: 1px solid var(--border); padding: 18px 20px; }
+    .ws-foot { flex-wrap: wrap; gap: 8px; }
+    .ws-foot .ws-files { margin-right: 0; }
+  }
 
   /* ---------- sections ---------- */
   section { max-width: 1140px; margin: 0 auto; padding: clamp(80px, 11vh, 116px) 24px 0; position: relative; }
@@ -443,6 +513,40 @@
     <a class="btn btn-primary" href="#compare">了解新方式</a>
     <a class="btn btn-ghost" href="#features">看看能做什么</a>
   </div>
+
+  <!-- 正在构建 Mod 的工作台(参考 AI 编程代理实时演示) -->
+  <div class="workspace h-anim" style="--d:.62s" aria-hidden="true">
+    <div class="ws-bar">
+      <div class="ws-dots"><i></i><i></i><i></i></div>
+      <span class="ws-title">AiMod Agent · 正在为你构建 Mod</span>
+      <span class="ws-pill"><b class="pill-dot"></b>运行中</span>
+    </div>
+    <div class="ws-body">
+      <div class="ws-goal">
+        <div class="goal-tag">GOAL</div>
+        <div class="goal-title">宝箱透视 Mod</div>
+        <div class="goal-meta"><span class="gprog" data-t="2/3">2 / 3</span> 目标 · <span class="gtok">8.4K</span> tokens</div>
+        <ul>
+          <li data-step="0"><i>✓</i>定位宝箱材质层</li>
+          <li data-step="1"><i>✓</i>注入高亮着色器</li>
+          <li data-step="2"><i>◌</i>写入游戏场景配置</li>
+        </ul>
+      </div>
+      <div class="ws-log">
+        <div class="ws-log-inner">
+          <div class="ws-live"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="ws-foot">
+      <span class="ws-files">3 个文件已更改</span>
+      <span class="ws-add">+50</span>
+      <span class="ws-del">−4</span>
+      <span class="ws-min">执行 6 秒</span>
+      <span class="ws-undo">↺ 撤销</span>
+    </div>
+  </div>
+
   <div class="stats h-anim" style="--d:.6s">
     <div class="st"><b data-count="2">0</b><span>大引擎体系</span></div>
     <div class="sep"></div>
@@ -760,6 +864,46 @@
       run();
     }
     run();
+  }
+
+  // 工作台实时构建日志(参考 AI 编程代理演示)
+  const wsLog = document.querySelector('.ws-log-inner');
+  const wsSteps = [...document.querySelectorAll('.ws-goal li')];
+  const wsLive = document.querySelector('.ws-live');
+  const wsSeq = [
+    { pre: '§', text: '分析场景:定位宝箱资源与材质层', ms: 900, step: 0 },
+    { pre: '§', text: '生成 宝箱高亮.lua', chip: '+26', ms: 720, ok: true, step: 1 },
+    { pre: '✓', text: '校验 宝箱高亮.lua · 0 error', ms: 640, ok: true },
+    { pre: '§', text: '注入 场景配置 scene.json', chip: '+12', ms: 720, step: 2 },
+    { pre: '✓', text: '已生效 · 执行 6 秒 · 3 文件变更', ms: 420, done: true }
+  ];
+  function wsLine(dest, o) {
+    const line = document.createElement('div');
+    line.className = 'ws-line' + (o.ok ? ' ok' : '') + (o.done ? ' done' : '') + (o.pre === '§' ? ' cm' : '');
+    line.innerHTML = `<span class="pre">${o.pre}</span><span>${o.text}</span>` + (o.chip ? `<span class="chip">${o.chip}</span>` : '');
+    dest.insertBefore(line, wsLive);
+    requestAnimationFrame(() => requestAnimationFrame(() => line.classList.add('on')));
+  }
+  async function runWS() {
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    wsSteps.forEach(s => s.classList.remove('ok'));
+    wsLog.querySelectorAll('.ws-line').forEach(l => l.remove());
+    wsLive.style.display = 'inline-flex';
+    for (const o of wsSeq) {
+      wsStepMark(o.step);
+      wsLine(wsLog, o);
+      await sleep(o.ms);
+    }
+    wsLive.style.display = 'none';
+    await sleep(3600);
+    runWS();
+  }
+  function wsStepMark(i) { if (i != null) wsSteps[i].classList.add('ok'); }
+  if (reduced) {
+    wsSteps.forEach((s, i) => { if (i < 2) s.classList.add('ok'); });
+    if (wsLive) wsLive.style.display = 'none';
+  } else if (wsLog) {
+    runWS();
   }
 </script>
 </body>
