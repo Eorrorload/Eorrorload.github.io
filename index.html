@@ -7,598 +7,332 @@
 <meta name="description" content="AiMod 重新定义 Mod 开发:不用学编程,把想法说给 AI 听,它帮你在游戏里实现。Unity 与虚幻引擎游戏都能做 Mod,普通玩家也能成为 Mod 作者。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #05060a;
-    --bg-2: #080a11;
-    --bg-3: #0b0e17;
-    --glass: rgba(255,255,255,.028);
-    --glass-hi: rgba(255,255,255,.05);
-    --border: rgba(255,255,255,.075);
-    --hairline: rgba(255,255,255,.14);
-    --text: #eef1f7;
-    --text-dim: #8d97ad;
-    --text-faint: #5c6678;
-    --mint: #7df0c3;
-    --indigo: #93a5fd;
-    --rose: #e6a8d5;
-    --grad: linear-gradient(110deg, var(--mint), var(--indigo));
-    --font-display: "Space Grotesk", "PingFang SC", "Microsoft YaHei", sans-serif;
-    --font-body: "Inter", -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    --ease: cubic-bezier(.16, 1, .3, 1);
+    --bg: #0b0c0e;
+    --bg-2: #0e0f12;
+    --panel: #101115;
+    --panel-2: #14161b;
+    --line: rgba(255,255,255,.09);
+    --line-soft: rgba(255,255,255,.055);
+    --text: #ededea;
+    --text-dim: #98979e;
+    --text-faint: #63626a;
+    --accent: #9a8ffb;
+    --accent-soft: rgba(154,143,251,.16);
+    --font: "Inter", -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --ease: cubic-bezier(.22, .61, .36, 1);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; overflow-x: hidden; }
+  html { scroll-behavior: smooth; }
   body {
     background: var(--bg); color: var(--text);
-    font-family: var(--font-body); line-height: 1.8;
+    font-family: var(--font); line-height: 1.7;
     overflow-x: hidden; -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    text-rendering: optimizeLegibility; font-feature-settings: "ss01";
   }
-  ::selection { background: rgba(125,240,195,.28); color: #fff; }
-  section { scroll-margin-top: 84px; }
+  ::selection { background: rgba(154,143,251,.25); }
+  section { scroll-margin-top: 72px; }
 
-  /* 细微噪点,提升胶片质感 */
-  body::after {
-    content: ""; position: fixed; inset: 0; z-index: 9998;
-    pointer-events: none; opacity: .03; mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* ---------- announcement ---------- */
+  .announce {
+    text-align: center; font-size: 13px; letter-spacing: .2px;
+    padding: 11px 20px; color: var(--text-dim);
+    background: var(--bg-2); border-bottom: 1px solid var(--line-soft);
   }
-
-  /* 滚动进度 */
-  .progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 400; background: var(--grad); display: none; }
-  .js .progress { display: block; }
-
-  /* 自定义光标光晕 */
-  .cursor-glow {
-    position: fixed; width: 420px; height: 420px; z-index: 1; pointer-events: none;
-    border-radius: 50%; transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgba(125,240,195,.05), rgba(147,165,253,.05) 40%, transparent 70%);
-    opacity: 0; transition: opacity .4s;
-  }
+  .announce b { color: var(--text); font-weight: 600; }
+  .announce a { color: var(--accent); text-decoration: none; margin-left: 6px; }
+  .announce a:hover { text-decoration: underline; }
 
   /* ---------- nav ---------- */
   nav {
-    position: fixed; inset: 0 0 auto; z-index: 200; height: 68px;
+    position: sticky; top: 0; z-index: 100; height: 60px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 clamp(20px, 5vw, 56px);
+    padding: 0 clamp(20px, 5vw, 48px);
     border-bottom: 1px solid transparent;
-    transition: background .45s, border-color .45s, backdrop-filter .45s;
+    transition: background .35s, border-color .35s, backdrop-filter .35s;
   }
   nav.scrolled {
-    background: rgba(5,6,10,.6); backdrop-filter: blur(18px) saturate(150%);
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
-    border-bottom-color: var(--border);
+    background: rgba(11,12,14,.75); backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border-bottom-color: var(--line-soft);
   }
-  .logo { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: .3px; color: var(--text); text-decoration: none; position: relative; display: inline-flex; align-items: center; gap: 10px; }
-  .logo::before {
-    content: ""; width: 9px; height: 9px; border-radius: 3px;
-    background: var(--grad); box-shadow: 0 0 14px rgba(125,240,195,.7);
-    animation: logoSpin 6s var(--ease) infinite;
-  }
-  @keyframes logoSpin { 0%,100% { transform: rotate(0); } 50% { transform: rotate(45deg); } }
-  .logo b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .nav-links { display: flex; gap: clamp(18px, 3vw, 38px); align-items: center; }
-  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 14px; letter-spacing: .2px; position: relative; transition: color .25s; }
-  .nav-links a::after {
-    content: ""; position: absolute; left: 0; bottom: -6px; height: 1px; width: 0;
-    background: var(--grad); transition: width .3s var(--ease);
-  }
+  .logo { font-size: 17px; font-weight: 700; letter-spacing: -.01em; color: var(--text); text-decoration: none; }
+  .logo b { color: var(--accent); }
+  .nav-links { display: flex; gap: clamp(22px, 3.5vw, 44px); align-items: center; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 14px; transition: color .2s; }
   .nav-links a:hover { color: var(--text); }
-  .nav-links a:hover::after { width: 100%; }
-  .nav-links .gh {
-    color: var(--text); border: 1px solid var(--hairline); border-radius: 999px;
-    padding: 8px 20px; transition: all .25s; font-weight: 600;
+  .nav-cta {
+    color: #0b0c0e; background: var(--text); text-decoration: none;
+    font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 999px;
+    transition: transform .2s var(--ease), opacity .2s;
   }
-  .nav-links .gh::after { display: none; }
-  .nav-links .gh:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); transform: translateY(-1px); }
+  .nav-cta:hover { transform: translateY(-1px); opacity: .92; }
 
   /* ---------- hero ---------- */
   .hero {
-    position: relative; min-height: 96vh;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: clamp(120px, 16vh, 160px) 24px 90px;
-    overflow: hidden; isolation: isolate;
+    position: relative; overflow: hidden; isolation: isolate;
+    padding: clamp(88px, 13vh, 150px) 24px 76px; text-align: center;
   }
-  /* 极光背景层 */
-  .auri { position: absolute; inset: -20% -20%; z-index: -2; pointer-events: none; }
-  .auri .blob { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; }
-  .auri .b1 { width: 640px; height: 640px; background: radial-gradient(circle at 40% 40%, rgba(125,240,195,.32), transparent 62%); top: -14%; left: 6%; animation: aur1 24s var(--ease) infinite alternate; }
-  .auri .b2 { width: 600px; height: 600px; background: radial-gradient(circle at 60% 60%, rgba(147,165,253,.34), transparent 62%); top: -8%; right: 4%; animation: aur2 30s var(--ease) infinite alternate; }
-  .auri .b3 { width: 520px; height: 520px; background: radial-gradient(circle at 50% 50%, rgba(230,168,213,.18), transparent 65%); bottom: -6%; left: 40%; animation: aur3 26s var(--ease) infinite alternate; }
-  @keyframes aur1 { to { transform: translate(90px, 60px) scale(1.15); } }
-  @keyframes aur2 { to { transform: translate(-80px, 70px) scale(1.1); } }
-  @keyframes aur3 { to { transform: translate(60px, -50px) scale(1.2); } }
-
-  /* 透视网格 */
-  .grid-lines {
-    position: absolute; inset: 0; z-index: -3; pointer-events: none;
-    background-image:
-      linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
-    background-size: 64px 64px;
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
-    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+  .net { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; opacity: .5; }
+  .hero-inner { position: relative; max-width: 860px; margin: 0 auto; }
+  .eyebrow {
+    font-size: 13px; letter-spacing: .5px; color: var(--text-dim);
+    margin-bottom: 26px; font-weight: 500;
   }
-
-  .badge {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-family: var(--font-display); font-size: 12px; letter-spacing: 3px; color: var(--mint);
-    border: 1px solid rgba(125,240,195,.22); border-radius: 999px;
-    padding: 9px 22px; margin-bottom: 34px;
-    background: rgba(125,240,195,.04);
-    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  }
-  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 12px var(--mint); animation: pulse 2.2s infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.8); } }
-
+  .eyebrow::before { content: ""; display: inline-block; width: 20px; height: 1px; background: var(--accent); vertical-align: middle; margin-right: 10px; opacity: .7; }
   h1 {
-    font-family: var(--font-display);
-    font-size: clamp(42px, 7.4vw, 92px); font-weight: 700;
-    letter-spacing: -.02em; line-height: 1.08; margin-bottom: 28px; max-width: 960px;
+    font-size: clamp(44px, 7.2vw, 84px); font-weight: 600;
+    letter-spacing: -.03em; line-height: 1.04; margin-bottom: 24px;
   }
-  h1 .line { display: block; overflow: hidden; }
-  h1 .line > span { display: inline-block; transform: translateY(110%); }
-  .js h1 .line > span { animation: lineUp .9s var(--ease) forwards; }
-  .js h1 .line:nth-child(2) > span { animation-delay: .12s; }
-  @keyframes lineUp { to { transform: none; } }
-  h1 .grad {
-    background: linear-gradient(110deg, var(--mint), var(--indigo), var(--rose), var(--mint));
-    background-size: 260% 100%;
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: shimmer 8s linear infinite;
-  }
-  @keyframes shimmer { to { background-position: 260% 0; } }
-  h1 .caret {
-    display: inline-block; width: 3px; height: .9em; margin-left: 3px;
-    background: var(--mint); vertical-align: baseline; transform: translateY(.1em);
-    animation: caret 1.1s steps(1) infinite;
-  }
-  @keyframes caret { 50% { opacity: 0; } }
-
-  /* 首屏元素错峰入场 */
-  .js .h-anim { opacity: 0; animation: heroIn .95s var(--ease) forwards; animation-delay: var(--d, 0s); }
-  @keyframes heroIn { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
-
   .hero .sub {
-    max-width: 640px; margin: 0 auto 44px;
-    font-size: clamp(15.5px, 1.9vw, 18px); color: var(--text-dim); line-height: 2;
+    max-width: 600px; margin: 0 auto 38px;
+    font-size: clamp(16px, 1.8vw, 18.5px); color: var(--text-dim); line-height: 1.9;
   }
-  .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
   .btn {
-    position: relative; overflow: hidden; white-space: nowrap;
-    text-decoration: none; font-family: var(--font-display); font-size: 15px; font-weight: 600;
-    padding: 15px 38px; border-radius: 999px; transition: all .3s var(--ease);
-    will-change: transform; cursor: pointer;
+    text-decoration: none; font-size: 15px; font-weight: 600;
+    padding: 13px 30px; border-radius: 999px; transition: all .22s var(--ease);
   }
-  .btn-primary { background: linear-gradient(110deg, #f2f5f9, #d7dde7); color: #0a0d13; }
-  .btn-primary::after {
-    content: ""; position: absolute; top: 0; bottom: 0; left: -80%; width: 45%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,.85), transparent);
-    transform: skewX(-20deg); transition: left .6s ease; mix-blend-mode: screen;
-  }
-  .btn-primary:hover::after { left: 135%; }
-  .btn-ghost { color: var(--text); border: 1px solid var(--hairline); background: rgba(255,255,255,.02); }
-  .btn-ghost:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
-  .btn:active { transform: scale(.97); }
+  .btn-primary { color: #0b0c0e; background: var(--text); }
+  .btn-primary:hover { transform: translateY(-2px); opacity: .92; }
+  .btn-ghost { color: var(--text); border: 1px solid var(--line); background: var(--panel); }
+  .btn-ghost:hover { border-color: rgba(255,255,255,.3); transform: translateY(-2px); }
 
-  /* 数据条 */
-  .stats {
-    display: flex; align-items: center; justify-content: center; gap: clamp(28px, 5vw, 60px);
-    margin: 70px auto 0; padding: 26px 44px; width: fit-content; max-width: 92%;
-    border-block: 1px solid var(--border);
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.015), transparent);
-    border-radius: 6px;
+  /* ---------- AI 演示卡(Reflect 式) ---------- */
+  .ai-card {
+    max-width: 620px; margin: 0 auto; text-align: left;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,.4);
   }
-  .stats .st { text-align: center; }
-  .stats b {
-    display: block; font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1.15;
-    font-variant-numeric: tabular-nums;
-    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  .ai-top {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 18px; border-bottom: 1px solid var(--line-soft);
+    font-size: 12.5px; color: var(--text-dim); letter-spacing: .3px;
   }
-  .stats span { font-size: 13px; color: var(--text-dim); letter-spacing: .5px; }
-  .stats .sep { width: 1px; height: 42px; background: var(--border); }
+  .ai-top i { width: 9px; height: 9px; border-radius: 50%; background: var(--text-faint); }
+  .ai-top i:first-child { background: var(--accent); }
+  .ai-top .live { color: var(--text); margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .ai-top .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .ai-body { padding: 22px 22px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .ai-q { font-size: 16px; font-weight: 600; color: var(--text); }
+  .ai-q .qp { color: var(--text-faint); font-weight: 400; margin-right: 4px; }
+  .ai-a {
+    font-size: 14.5px; color: var(--text-dim); line-height: 1.85;
+    border-left: 2px solid var(--accent); padding-left: 14px; min-height: 60px;
+  }
+  .ai-a .ok { color: var(--text); font-weight: 600; }
+  .ai-a .ok::before { content: " · "; color: var(--text-faint); font-weight: 400; }
+  .ai-dots { display: inline-flex; gap: 4px; align-items: center; }
+  .ai-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--text-faint); animation: blink 1.2s infinite; }
+  .ai-dots i:nth-child(2) { animation-delay: .2s; } .ai-dots i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,60%,100% { opacity: .25; } 30% { opacity: 1; } }
+  .ai-actions {
+    display: flex; gap: 18px; padding: 14px 22px; border-top: 1px solid var(--line-soft);
+    font-size: 12.5px; color: var(--text-faint); letter-spacing: .3px;
+  }
+  .ai-actions span b { color: var(--text-dim); border: 1px solid var(--line); border-radius: 5px; padding: 1px 7px; font-size: 11.5px; margin-left: 6px; font-weight: 500; }
 
-  .scroll-hint {
-    position: static; margin: 46px auto 0;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    color: var(--text-faint); font-size: 11px; letter-spacing: 2px;
-  }
-  .scroll-hint i { width: 16px; height: 24px; border: 1px solid var(--hairline); border-radius: 10px; position: relative; }
-  .scroll-hint i::after { content: ""; position: absolute; top: 5px; left: 50%; width: 2px; height: 5px; margin-left: -1px; background: var(--mint); border-radius: 2px; animation: wheel 1.8s var(--ease) infinite; }
-  @keyframes wheel { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+  /* 首屏错峰入场 */
+  .js .h-anim { opacity: 0; transform: translateY(18px); animation: revIn .8s var(--ease) forwards; animation-delay: var(--d, 0s); }
+  @keyframes revIn { to { opacity: 1; transform: none; } }
 
-  /* ---------- hero 工作台 ---------- */
-  .workspace {
-    width: 100%; max-width: 900px; margin: 52px auto 6px; text-align: left;
-    background: rgba(8,10,17,.6); border: 1px solid var(--hairline); border-radius: 18px;
-    overflow: hidden; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 50px 130px rgba(0,0,0,.55), 0 0 110px rgba(147,165,253,.05);
+  /* ---------- feature snapshot ---------- */
+  .snapshot {
+    border-block: 1px solid var(--line-soft);
+    margin-top: 70px; padding: 34px 24px;
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 28px 30px;
+    max-width: 1080px; margin-left: auto; margin-right: auto;
   }
-  .ws-bar {
-    display: flex; align-items: center; gap: 10px;
-    padding: 13px 18px; background: rgba(255,255,255,.02); border-bottom: 1px solid var(--border);
-  }
-  .ws-dots { display: flex; gap: 5px; }
-  .ws-dots i { width: 10px; height: 10px; border-radius: 50%; opacity: .85; }
-  .ws-dots i:nth-child(1) { background: #ff5f57; }
-  .ws-dots i:nth-child(2) { background: #febc2e; }
-  .ws-dots i:nth-child(3) { background: #28c840; }
-  .ws-title { font-size: 12.5px; color: var(--text); letter-spacing: .3px; font-weight: 600; }
-  .ws-pill {
-    margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11px; color: var(--mint); border: 1px solid rgba(125,240,195,.25);
-    padding: 3px 10px; border-radius: 999px; letter-spacing: 1px;
-  }
-  .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 8px var(--mint); animation: pulse 1.6s infinite; }
-  .ws-body { display: grid; grid-template-columns: 250px 1fr; }
-  .ws-goal { padding: 22px 20px; border-right: 1px solid var(--border); background: rgba(255,255,255,.015); }
-  .goal-tag { font-family: var(--font-display); font-size: 10.5px; letter-spacing: 3px; color: var(--indigo); margin-bottom: 8px; }
-  .goal-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 6px; }
-  .goal-meta { font-size: 12px; color: var(--text-dim); margin-bottom: 16px; font-variant-numeric: tabular-nums; }
-  .goal-meta .gprog { color: var(--mint); font-weight: 700; }
-  .ws-goal ul { list-style: none; display: flex; flex-direction: column; gap: 11px; }
-  .ws-goal li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--text-faint); transition: color .4s, opacity .4s; }
-  .ws-goal li i { width: 16px; height: 16px; flex: none; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-style: normal; background: rgba(255,255,255,.06); color: var(--text-faint); }
-  .ws-goal li.ok { color: var(--text); }
-  .ws-goal li.ok i { background: var(--grad); color: #07110c; }
-  .ws-log { padding: 16px 20px; }
-  .ws-log-inner { display: flex; flex-direction: column; gap: 9px; min-height: 150px; font-family: var(--font-display); font-size: 12.8px; }
-  .ws-line { display: flex; gap: 10px; align-items: baseline; color: var(--text-dim); line-height: 1.6; opacity: 0; transform: translateY(4px); transition: opacity .4s var(--ease), transform .4s var(--ease); }
-  .ws-line.on { opacity: 1; transform: none; }
-  .ws-line .pre { flex: none; width: 16px; font-weight: 700; color: var(--indigo); }
-  .ws-line.cm { color: var(--text-faint); }
-  .ws-line.ok { color: var(--text); }
-  .ws-line.ok .pre { color: var(--mint); }
-  .ws-line.done { color: var(--mint); font-weight: 700; }
-  .ws-line.done .pre { color: var(--mint); }
-  .ws-line .chip { margin-left: auto; font-size: 11px; color: var(--indigo); border: 1px solid rgba(147,165,253,.3); padding: 1px 8px; border-radius: 6px; background: rgba(147,165,253,.05); }
-  .ws-line.ok .chip { color: var(--mint); border-color: rgba(125,240,195,.3); background: rgba(125,240,195,.05); }
-  .ws-live { display: inline-flex; gap: 5px; align-items: center; padding: 2px 0; }
-  .ws-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); animation: blink 1.2s infinite; }
-  .ws-live i:nth-child(2) { animation-delay: .2s; } .ws-live i:nth-child(3) { animation-delay: .4s; }
-  .ws-foot {
-    display: flex; align-items: center; gap: 12px; padding: 13px 20px;
-    border-top: 1px solid var(--border); background: rgba(255,255,255,.015);
-    font-size: 12px; color: var(--text-dim);
-  }
-  .ws-foot .ws-files { margin-right: auto; }
-  .ws-add { color: var(--mint); font-weight: 700; }
-  .ws-del { color: var(--rose); font-weight: 700; }
-  .ws-min { color: var(--text-faint); }
-  .ws-foot .ws-undo { color: var(--text); border: 1px solid var(--hairline); padding: 2px 10px; border-radius: 6px; }
-  @media (max-width: 720px) {
-    .ws-body { grid-template-columns: 1fr; }
-    .ws-goal { border-right: none; border-bottom: 1px solid var(--border); padding: 18px 20px; }
-    .ws-foot { flex-wrap: wrap; gap: 8px; }
-    .ws-foot .ws-files { margin-right: 0; }
-  }
+  .snap { text-align: left; }
+  .snap b { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .snap p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
 
   /* ---------- sections ---------- */
-  section { max-width: 1140px; margin: 0 auto; padding: clamp(80px, 11vh, 116px) 24px 0; position: relative; }
-  .sec-head { text-align: center; margin-bottom: 60px; }
-  .sec-tag {
-    display: flex; align-items: center; justify-content: center; gap: 16px;
-    font-family: var(--font-display); font-size: 12px; letter-spacing: 4px; color: var(--text-dim);
-    margin-bottom: 20px; font-weight: 600;
-  }
-  .sec-tag::before, .sec-tag::after { content: ""; width: 46px; height: 1px; background: linear-gradient(90deg, transparent, var(--hairline)); }
-  .sec-tag::after { background: linear-gradient(90deg, var(--hairline), transparent); }
-  h2 { font-family: var(--font-display); font-size: clamp(28px, 4.2vw, 43px); font-weight: 700; letter-spacing: -.015em; line-height: 1.16; margin-bottom: 16px; }
-  h2 .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .sec-desc { color: var(--text-dim); max-width: 560px; margin: 0 auto; font-size: 15px; }
+  section { max-width: 1040px; margin: 0 auto; padding: clamp(64px, 9vh, 96px) 24px 0; position: relative; }
+  .sec-head { max-width: 620px; margin: 0 auto 54px; text-align: center; }
+  .sec-kicker { font-size: 12.5px; letter-spacing: 2px; color: var(--accent); font-weight: 600; margin-bottom: 14px; }
+  h2 { font-size: clamp(30px, 4vw, 42px); font-weight: 600; letter-spacing: -.02em; line-height: 1.14; margin-bottom: 14px; }
+  .sec-desc { color: var(--text-dim); font-size: 16px; line-height: 1.8; }
 
-  /* 跑马灯 */
-  .marquee { border-block: 1px solid var(--border); padding: 22px 0; overflow: hidden; margin-top: clamp(40px, 6vh, 70px); }
-  .marquee-track { display: flex; gap: 70px; width: max-content; animation: marquee 30s linear infinite; }
-  .marquee:hover .marquee-track { animation-play-state: paused; }
-  .marquee .m { font-family: var(--font-display); font-size: 15px; letter-spacing: 1px; color: var(--text-dim); display: flex; align-items: center; gap: 14px; white-space: nowrap; }
-  .marquee .m::before { content: "◆"; font-size: 9px; color: var(--mint); opacity: .8; }
-  @keyframes marquee { to { transform: translateX(-50%); } }
-
-  /* ---------- 对比 ---------- */
-  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; max-width: 960px; margin: 0 auto; position: relative; }
+  /* ---------- 对比:两栏 ---------- */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
   .comp {
-    position: relative; border-radius: 22px; padding: 36px 34px 32px;
-    background: linear-gradient(180deg, var(--glass-hi), var(--glass));
-    border: 1px solid var(--border);
-    transition: all .4s var(--ease); overflow: hidden;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 30px 30px 28px; transition: border-color .3s, transform .3s var(--ease);
   }
-  .comp::before {
-    content: ""; position: absolute; inset: 0 0 auto; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent);
-    opacity: 0; transition: opacity .4s;
-  }
-  .comp:hover { transform: translateY(-5px); }
-  .comp:hover::before { opacity: 1; }
-  .comp.old { opacity: .72; }
-  .comp.old:hover { opacity: .9; border-color: var(--hairline); }
-  .comp.new { border-color: rgba(125,240,195,.26); box-shadow: 0 0 80px rgba(125,240,195,.06), 0 30px 70px rgba(0,0,0,.5); }
-  .comp.new:hover { border-color: rgba(125,240,195,.5); box-shadow: 0 0 110px rgba(125,240,195,.1), 0 30px 70px rgba(0,0,0,.55); }
-  .comp-head { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-size: 16px; font-weight: 700; margin-bottom: 24px; letter-spacing: .2px; }
-  .comp-head .mk { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex: none; }
-  .comp.old .mk { background: rgba(255,255,255,.07); color: var(--text-dim); }
-  .comp.new .mk { background: var(--grad); color: #07110c; }
-  .comp ul { list-style: none; display: flex; flex-direction: column; gap: 14px; }
-  .comp li { position: relative; padding-left: 22px; font-size: 14.5px; color: var(--text-dim); }
-  .comp li::before { content: ""; position: absolute; left: 2px; top: .82em; width: 5px; height: 5px; border-radius: 50%; }
-  .comp.old li::before { background: rgba(255,255,255,.18); }
-  .comp.old li { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.2); text-decoration-thickness: 1px; }
-  .comp.new li { color: var(--text); }
-  .comp.new li::before { background: var(--mint); box-shadow: 0 0 8px rgba(125,240,195,.7); }
-  .vs {
-    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-    width: 50px; height: 50px; border-radius: 50%;
+  .comp:hover { transform: translateY(-3px); border-color: var(--line); }
+  .comp.new { border-color: rgba(154,143,251,.35); background: var(--panel-2); }
+  .comp-head { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .comp.new .comp-head { color: var(--accent); }
+  .comp ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .comp li { font-size: 14.5px; color: var(--text-dim); padding-left: 18px; position: relative; }
+  .comp li::before { content: ""; position: absolute; left: 0; top: .72em; width: 5px; height: 5px; border-radius: 50%; background: var(--text-faint); }
+  .comp.new li::before { background: var(--accent); }
+  .comp.old li { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.18); }
+
+  /* ---------- 两栏:图片对话式 ---------- */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(36px, 6vw, 72px); align-items: center; }
+  .split .txt .sec-kicker { text-align: left; }
+  .split h2 { text-align: left; }
+  .split .lead { color: var(--text-dim); font-size: 15.5px; line-height: 1.85; margin-bottom: 26px; }
+  .list { list-style: none; display: flex; flex-direction: column; gap: 18px; }
+  .list li { display: flex; gap: 14px; }
+  .list .n {
+    flex: none; width: 26px; height: 26px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
     display: flex; align-items: center; justify-content: center;
-    background: var(--bg-3); border: 1px solid var(--hairline);
-    font-family: var(--font-display); font-size: 12px; font-weight: 800; color: var(--text-dim); letter-spacing: 1px;
-    z-index: 2; box-shadow: 0 0 40px rgba(0,0,0,.5);
+    background: var(--accent-soft); color: var(--accent);
   }
+  .list b { display: block; font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .list p { font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
 
-  /* ---------- featured grid ---------- */
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; perspective: 1200px; }
-  .card {
-    position: relative; transform-style: preserve-3d;
-    background: linear-gradient(180deg, var(--glass-hi), var(--glass));
-    border: 1px solid var(--border); border-radius: 20px;
-    padding: 34px 30px; transition: transform .15s ease-out, border-color .4s, box-shadow .4s;
-    will-change: transform; overflow: hidden;
+  /* 构建过程 mock */
+  .build {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px 20px; font-size: 13px; overflow: hidden;
   }
-  .card::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit;
-    background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%), rgba(125,240,195,.12), transparent 60%);
-    opacity: 0; transition: opacity .4s; pointer-events: none;
-  }
-  .card::after {
-    content: ""; position: absolute; inset: 0 0 auto; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
-    opacity: 0; transition: opacity .35s;
-  }
-  .card:hover { border-color: var(--hairline); box-shadow: 0 30px 70px rgba(0,0,0,.5); }
-  .card:hover::before, .card:hover::after { opacity: 1; }
-  .card .ico {
-    width: 50px; height: 50px; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; margin-bottom: 22px;
-    background: rgba(255,255,255,.045); border: 1px solid var(--border);
-    transition: transform .35s var(--ease), box-shadow .35s;
-  }
-  .card:hover .ico { transform: translateY(-4px) scale(1.06) rotate(-3deg); box-shadow: 0 10px 30px rgba(125,240,195,.12); }
-  .card h3 { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 10px; letter-spacing: .1px; }
-  .card p { font-size: 14px; color: var(--text-dim); }
+  .build-bar { display: flex; gap: 6px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line-soft); }
+  .build-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--text-faint); }
+  .build-line { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; color: var(--text-dim); opacity: 0; transform: translateY(4px); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+  .build-line.on { opacity: 1; transform: none; }
+  .build-line .pre { flex: none; width: 14px; font-weight: 600; color: var(--accent); }
+  .build-line.ok { color: var(--text); }
+  .build-line.done { color: var(--accent); font-weight: 600; }
+  .build-line .chip { margin-left: auto; font-size: 11px; color: var(--text-dim); border: 1px solid var(--line); padding: 1px 8px; border-radius: 5px; }
+  .build-line.ok .chip { color: var(--accent); border-color: rgba(154,143,251,.35); }
+  .build-dots { display: inline-flex; gap: 4px; align-items: center; padding: 8px 0; }
+  .build-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--text-faint); animation: blink 1.2s infinite; }
+  .build-dots i:nth-child(2) { animation-delay: .2s; } .build-dots i:nth-child(3) { animation-delay: .4s; }
 
-  /* ---------- steps ---------- */
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .step {
-    position: relative; overflow: hidden;
-    background: linear-gradient(180deg, var(--glass-hi), var(--glass));
-    border: 1px solid var(--border); border-radius: 20px;
-    padding: 36px 30px 32px; transition: all .35s var(--ease);
+  /* ---------- 引擎/集成 ---------- */
+  .engines { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .engine {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 24px 20px; text-align: center; transition: border-color .3s, transform .3s var(--ease);
   }
-  .step .ring {
-    position: absolute; top: 30px; right: -30px; width: 130px; height: 130px; border-radius: 50%;
-    border: 1px solid var(--border); opacity: .6;
-  }
-  .step .ring::before { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--hairline); transform: scale(1.35); opacity: .4; }
-  .step:hover { transform: translateY(-5px); border-color: var(--hairline); box-shadow: 0 30px 70px rgba(0,0,0,.5); }
-  .step:hover .ring { transform: scale(1.1); transition: transform .6s var(--ease); }
-  .step .num {
-    display: inline-block; font-family: var(--font-display); font-size: 15px; font-weight: 700; letter-spacing: 2px;
-    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
-    padding-bottom: 14px; margin-bottom: 20px; position: relative;
-  }
-  .step .num::after { content: ""; position: absolute; left: 0; bottom: 0; width: 30px; height: 2px; background: var(--grad); border-radius: 2px; }
-  .step h3 { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 10px; }
-  .step p { font-size: 14px; color: var(--text-dim); position: relative; }
-  .step p em { font-style: normal; color: var(--text); }
+  .engine:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.22); }
+  .engine .eg { font-size: 22px; display: block; margin-bottom: 10px; opacity: .85; }
+  .engine b { font-size: 14.5px; font-weight: 600; display: block; margin-bottom: 4px; }
+  .engine p { font-size: 12.5px; color: var(--text-dim); }
 
-  /* ---------- AI 控制台演示 ---------- */
-  .terminal-wrap { max-width: 680px; margin: 0 auto; }
-  .terminal {
-    background: rgba(8,10,17,.7); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--hairline); border-radius: 20px; overflow: hidden;
-    box-shadow: 0 50px 130px rgba(0,0,0,.6), 0 0 120px rgba(147,165,253,.06);
+  /* ---------- wall of love ---------- */
+  .love { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .quote {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px 22px;
   }
-  .terminal-bar {
-    display: flex; align-items: center; gap: 8px;
-    padding: 15px 20px; background: rgba(255,255,255,.02);
-    border-bottom: 1px solid var(--border);
-  }
-  .terminal-bar i { width: 11px; height: 11px; border-radius: 50%; display: block; opacity: .9; }
-  .terminal-bar i:nth-child(1) { background: #ff5f57; }
-  .terminal-bar i:nth-child(2) { background: #febc2e; }
-  .terminal-bar i:nth-child(3) { background: #28c840; }
-  .terminal-bar span { margin-left: 8px; font-size: 12.5px; color: var(--text-dim); letter-spacing: .5px; font-family: var(--font-display); }
-  .terminal-body { padding: 30px 28px 28px; display: flex; flex-direction: column; gap: 17px; min-height: 400px; font-size: 14.5px; }
-  .t-user { align-self: flex-end; max-width: 86%; padding: 13px 19px; border-radius: 17px; border-bottom-right-radius: 5px; background: linear-gradient(110deg, #f2f5f9, #dbe1ec); color: #0a0d13; font-weight: 600; }
-  .t-ai { align-self: flex-start; max-width: 88%; padding: 14px 19px; border-radius: 17px; border-bottom-left-radius: 5px; background: rgba(255,255,255,.045); border: 1px solid var(--border); color: var(--text); }
-  .t-ai .ok { color: var(--mint); font-weight: 700; }
-  .t-ai .tag {
-    display: inline-block; font-size: 11px; letter-spacing: 1px; padding: 3px 10px; margin-bottom: 8px;
-    border-radius: 999px; border: 1px solid rgba(125,240,195,.3); color: var(--mint);
-  }
-  .t-dots { display: inline-flex; gap: 5px; align-items: center; padding: 4px 0; }
-  .t-ai .t-dots { padding: 10px 2px; }
-  .t-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); animation: blink 1.2s infinite; }
-  .t-dots i:nth-child(2) { animation-delay: .2s; }
-  .t-dots i:nth-child(3) { animation-delay: .4s; }
-  @keyframes blink { 0%,60%,100% { opacity: .25; } 30% { opacity: 1; } }
-  .terminal-note { text-align: center; color: var(--text-dim); font-size: 13px; margin-top: 26px; letter-spacing: .4px; }
+  .quote .q { font-size: 14.5px; line-height: 1.8; color: var(--text); margin-bottom: 16px; }
+  .quote .who { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-dim); }
+  .quote .who .av { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
 
-  /* ---------- scenarios ---------- */
-  .scen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-  .scen .s {
-    background: linear-gradient(180deg, var(--glass-hi), var(--glass));
-    border: 1px solid var(--border); border-radius: 18px;
-    padding: 32px 24px; text-align: center;
-    transition: all .4s var(--ease); position: relative; overflow: hidden;
+  /* ---------- cta band ---------- */
+  .cta-band {
+    text-align: center; padding: clamp(72px, 10vh, 110px) 24px 0; max-width: 680px; margin: 0 auto;
   }
-  .scen .s::before { content: ""; position: absolute; inset: 0 0 auto; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent); opacity: 0; transition: opacity .35s; }
-  .scen .s:hover { transform: translateY(-6px); border-color: var(--hairline); box-shadow: 0 30px 70px rgba(0,0,0,.5); }
-  .scen .s:hover::before { opacity: 1; }
-  .scen .s .e { font-size: 30px; display: block; margin-bottom: 16px; transition: transform .4s var(--ease); }
-  .scen .s:hover .e { transform: scale(1.18) rotate(-5deg); }
-  .scen .s h3 { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 9px; }
-  .scen .s p { font-size: 13.5px; color: var(--text-dim); }
+  .cta-band h2 { margin-bottom: 10px; }
+  .cta-band p { color: var(--text-dim); margin-bottom: 30px; font-size: 16px; }
 
   /* ---------- footer ---------- */
-  footer {
-    margin-top: clamp(90px, 12vh, 120px); padding: 52px 24px 60px;
-    border-top: 1px solid var(--border); text-align: center;
-    position: relative; overflow: hidden;
-  }
-  footer::before { content: ""; position: absolute; top: -1px; left: 25%; right: 25%; height: 1px; background: linear-gradient(90deg, transparent, var(--mint), var(--indigo), transparent); opacity: .6; }
-  footer .f-logo { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 9px; }
-  footer .f-logo::before { content: ""; width: 8px; height: 8px; border-radius: 3px; background: var(--grad); }
-  footer .f-logo b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  footer .copy { font-size: 12.5px; color: var(--text-faint); letter-spacing: .4px; }
+  footer { margin-top: clamp(80px, 11vh, 120px); border-top: 1px solid var(--line-soft); padding: 60px 24px 46px; }
+  .foot-grid { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.4fr; gap: 32px; }
+  .foot-brand .logo { font-size: 18px; margin-bottom: 12px; display: inline-block; }
+  .foot-brand p { color: var(--text-faint); font-size: 13.5px; max-width: 210px; line-height: 1.7; }
+  .foot-col h4 { font-size: 12.5px; letter-spacing: 1.5px; color: var(--text-faint); font-weight: 600; text-transform: uppercase; margin-bottom: 16px; }
+  .foot-col a { display: block; color: var(--text-dim); text-decoration: none; font-size: 14px; margin-bottom: 10px; transition: color .2s; }
+  .foot-col a:hover { color: var(--text); }
+  .news p { font-size: 13.5px; color: var(--text-dim); line-height: 1.7; margin-bottom: 14px; }
+  .news .field { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .news input { flex: 1; background: transparent; border: none; padding: 10px 12px; color: var(--text); font-size: 13.5px; outline: none; }
+  .news input::placeholder { color: var(--text-faint); }
+  .news button { background: var(--text); color: #0b0c0e; border: none; padding: 0 16px; font-weight: 600; cursor: pointer; }
+  .foot-bottom { max-width: 1080px; margin: 40px auto 0; padding-top: 24px; border-top: 1px solid var(--line-soft); display: flex; gap: 20px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--text-faint); }
+  .foot-bottom a { color: var(--text-faint); text-decoration: none; }
+  .foot-bottom a:hover { color: var(--text); }
+  .foot-bottom .sp { margin-left: auto; }
 
-  /* ---------- reveal(滚动进入视口时绽放) ---------- */
-  .js .rv { opacity: 0; transform: translateY(42px) scale(.965); filter: blur(8px); transition: opacity .9s var(--ease), transform .9s var(--ease), filter .9s var(--ease); will-change: transform, opacity; }
-  .js .rv.on { opacity: 1; transform: none; filter: none; }
-  .js .rv.d1 { transition-delay: .08s; } .js .rv.d2 { transition-delay: .16s; } .js .rv.d3 { transition-delay: .24s; }
-
-  /* 滚动视差漂浮光球 */
-  .p-orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: -1; will-change: transform; }
+  /* ---------- reveal ---------- */
+  .js .rv { opacity: 0; transform: translateY(20px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .js .rv.on { opacity: 1; transform: none; }
+  .js .rv.d1 { transition-delay: .07s; } .js .rv.d2 { transition-delay: .14s; } .js .rv.d3 { transition-delay: .21s; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
-    .js .rv, .js h1 .line > span, .js .h-anim { opacity: 1 !important; transform: none !important; filter: none !important; }
-    .js h1 .line > span { animation: none !important; transform: none !important; }
+    .js .rv, .js .h-anim, .js h1 .line > span { opacity: 1 !important; transform: none !important; }
   }
 
   @media (max-width: 900px) {
-    .grid, .steps { grid-template-columns: 1fr 1fr; }
-    .scen { grid-template-columns: 1fr 1fr; }
-    .compare { grid-template-columns: 1fr; }
-    .vs { display: none; }
-    .nav-links a:not(.gh) { display: none; }
-    .scroll-hint { display: none; }
+    .snapshot { grid-template-columns: repeat(2, 1fr); }
+    .compare, .split, .love { grid-template-columns: 1fr; }
+    .engines { grid-template-columns: repeat(2, 1fr); }
+    .foot-grid { grid-template-columns: 1fr 1fr; }
+    .nav-links a:not(.nav-cta) { display: none; }
   }
   @media (max-width: 560px) {
-    .grid, .steps, .scen { grid-template-columns: 1fr; }
-    .stats { gap: 22px; padding: 22px 24px; }
-    .t-user, .t-ai { max-width: 94%; }
+    .snapshot, .engines, .love { grid-template-columns: 1fr; }
+    .foot-grid { grid-template-columns: 1fr 1fr; }
+    .cta { flex-direction: column; align-items: center; }
   }
 </style>
 </head>
 <body>
 
-<div class="cursor-glow" aria-hidden="true"></div>
-<div class="progress" aria-hidden="true"></div>
+<div class="announce">新 · AiMod 现已支持 <b>Unity 与虚幻双引擎</b>,自动识别游戏类型<a href="#features">了解更多 →</a></div>
 
-<nav>
-  <a class="logo" href="#"><b>Ai</b>Mod</a>
+<nav id="nav">
+  <a class="logo" href="#"><b>A</b>iMod</a>
   <div class="nav-links">
     <a href="#features">特性</a>
     <a href="#how">工作方式</a>
     <a href="#scenarios">玩法灵感</a>
-    <a class="gh" href="https://github.com/Eorrorload/AiMod" target="_blank" rel="noopener">GitHub ↗</a>
+    <a class="nav-cta" href="#start">开始使用</a>
   </div>
 </nav>
 
 <header class="hero">
-  <div class="grid-lines" aria-hidden="true"></div>
-  <div class="auri" aria-hidden="true">
-    <div class="blob b1" data-depth="1.2"></div>
-    <div class="blob b2" data-depth="1.5"></div>
-    <div class="blob b3" data-depth="1.1"></div>
-  </div>
-
-  <div class="badge h-anim" style="--d:.05s"><span class="dot"></span>AI-NATIVE MOD PLATFORM · 2026</div>
-  <h1>
-    <span class="line"><span>会聊天,</span></span>
-    <span class="line"><span class="grad">就能做 Mod</span><span class="caret"></span></span>
-  </h1>
-  <p class="sub h-anim" style="--d:.35s">AiMod 重新定义 Mod 开发——不用学编程,不用懂游戏结构,把想法说给 AI 听,它帮你在游戏里实现。普通玩家,也能成为 Mod 作者。</p>
-  <div class="cta h-anim" style="--d:.5s">
-    <a class="btn btn-primary" href="#compare">了解新方式</a>
-    <a class="btn btn-ghost" href="#features">看看能做什么</a>
-  </div>
-
-  <!-- 正在构建 Mod 的工作台(参考 AI 编程代理实时演示) -->
-  <div class="workspace h-anim" style="--d:.62s" aria-hidden="true">
-    <div class="ws-bar">
-      <div class="ws-dots"><i></i><i></i><i></i></div>
-      <span class="ws-title">AiMod Agent · 正在为你构建 Mod</span>
-      <span class="ws-pill"><b class="pill-dot"></b>运行中</span>
+  <canvas class="net" id="net" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <div class="eyebrow h-anim rv" style="--d:.02s">AI 原生的 Mod 平台</div>
+    <h1 class="h-anim" style="--d:.1s">会聊天,就能做 Mod</h1>
+    <p class="sub h-anim" style="--d:.2s">不写一行代码,也不用学游戏结构。把想法说给 AiMod,它替你读懂游戏、亲手实现。普通玩家,也能成为 Mod 作者。</p>
+    <div class="cta h-anim" style="--d:.3s">
+      <a class="btn btn-primary" href="#start">开始使用</a>
+      <a class="btn btn-ghost" href="#features">看看能做什么</a>
     </div>
-    <div class="ws-body">
-      <div class="ws-goal">
-        <div class="goal-tag">GOAL</div>
-        <div class="goal-title">宝箱透视 Mod</div>
-        <div class="goal-meta"><span class="gprog" data-t="2/3">2 / 3</span> 目标 · <span class="gtok">8.4K</span> tokens</div>
-        <ul>
-          <li data-step="0"><i>✓</i>定位宝箱材质层</li>
-          <li data-step="1"><i>✓</i>注入高亮着色器</li>
-          <li data-step="2"><i>◌</i>写入游戏场景配置</li>
-        </ul>
+
+    <div class="ai-card h-anim" style="--d:.42s">
+      <div class="ai-top"><i></i><i></i><i></i>AiMod 工作台<span class="live">会话中</span></div>
+      <div class="ai-body">
+        <div class="ai-q"><span class="qp">你</span>做一个让宝箱发光的 Mod</div>
+        <div class="ai-a" id="ai-answer"></div>
       </div>
-      <div class="ws-log">
-        <div class="ws-log-inner">
-          <div class="ws-live"><i></i><i></i><i></i></div>
-        </div>
+      <div class="ai-actions">
+        <span>重新生成<b>R</b></span>
+        <span>插入<b>I</b></span>
+        <span>复制<b>C</b></span>
       </div>
     </div>
-    <div class="ws-foot">
-      <span class="ws-files">3 个文件已更改</span>
-      <span class="ws-add">+50</span>
-      <span class="ws-del">−4</span>
-      <span class="ws-min">执行 6 秒</span>
-      <span class="ws-undo">↺ 撤销</span>
+
+    <div class="snapshot rv d1">
+      <div class="snap"><b>零基础</b><p>会打字、会聊天,就会做 Mod。</p></div>
+      <div class="snap"><b>即点即用</b><p>想法到生效,以分钟计而非以周计。</p></div>
+      <div class="snap"><b>双引擎</b><p>Unity 与虚幻游戏都能做,自动适配。</p></div>
+      <div class="snap"><b>界面增强</b><p>血条、面板、高亮,一句话画出来。</p></div>
+      <div class="snap"><b>对话打磨</b><p>一句一句改,改到你满意为止。</p></div>
+      <div class="snap"><b>单文件</b><p>拷到任何电脑解压即用,零残留。</p></div>
     </div>
   </div>
-
-  <div class="stats h-anim" style="--d:.6s">
-    <div class="st"><b data-count="2">0</b><span>大引擎体系</span></div>
-    <div class="sep"></div>
-    <div class="st"><b data-count="3">0</b><span>步做出 Mod</span></div>
-    <div class="sep"></div>
-    <div class="st"><b data-count="60">0</b><span>秒 · 想法到生效</span></div>
-  </div>
-  <div class="scroll-hint" aria-hidden="true"><i></i>SCROLL</div>
 </header>
-
-<div class="marquee" aria-hidden="true">
-  <div class="marquee-track">
-    <span class="m">零门槛创作</span>
-    <span class="m">想法即刻生效</span>
-    <span class="m">Unity &amp; 虚幻双引擎</span>
-    <span class="m">单文件即用</span>
-    <span class="m">对话式打磨</span>
-    <span class="m">界面增强类 Mod</span>
-    <span class="m">无需任何配置</span>
-    <span class="m">转念 · 一句即改</span>
-  </div>
-</div>
-
-<!-- ============ AI 控制台演示 ============ -->
-<section id="demo">
-  <div class="sec-head">
-    <div class="sec-tag rv">EXPERIENCE</div>
-    <h2 class="rv">做 Mod 的感觉是<span class="grad">这样的</span></h2>
-    <p class="sec-desc rv">很像一条真实的 AI 对话:你只管描述,它负责实现。以下为控制台自动演示。</p>
-  </div>
-  <div class="terminal-wrap rv">
-    <div class="terminal">
-      <div class="terminal-bar"><i></i><i></i><i></i><span>AiMod 控制台</span></div>
-      <div class="terminal-body"></div>
-    </div>
-    <div class="terminal-note">每个 Mod 即时生效——任何一句不满意,直接说"撤销"就能还原。</div>
-  </div>
-</section>
 
 <!-- ============ 重新定义 ============ -->
 <section id="compare">
   <div class="sec-head">
-    <div class="sec-tag rv">A NEW WAY</div>
-    <h2 class="rv">重新定义 <span class="grad">Mod 开发</span></h2>
+    <div class="sec-kicker rv">A NEW WAY</div>
+    <h2 class="rv">重新定义 Mod 开发</h2>
     <p class="sec-desc rv">过去,做 Mod 是少数人的技术活;现在,每个玩家都能上手。</p>
   </div>
   <div class="compare">
     <div class="comp old rv">
-      <div class="comp-head"><span class="mk">✕</span>传统 Mod 开发</div>
+      <div class="comp-head">传统 Mod 开发</div>
       <ul>
         <li>先学编程语言,再啃游戏内部结构</li>
         <li>研究文件格式、内存布局与开发框架</li>
@@ -606,9 +340,8 @@
         <li>改一点,就要重新编译调试一轮</li>
       </ul>
     </div>
-    <div class="vs rv d2">VS</div>
     <div class="comp new rv d1">
-      <div class="comp-head"><span class="mk">✓</span>AiMod 方式</div>
+      <div class="comp-head">AiMod 方式</div>
       <ul>
         <li>用日常语言描述想要的效果</li>
         <li>AI 自动理解游戏并代为实现</li>
@@ -619,309 +352,237 @@
   </div>
 </section>
 
-<!-- ============ 特性 ============ -->
-<section id="features">
-  <div class="p-orb" data-speed="0.18" style="top:140px; right:-120px; width:380px; height:380px; background: radial-gradient(circle, rgba(125,240,195,.16), transparent 62%);" aria-hidden="true"></div>
-  <div class="p-orb" data-speed="0.28" style="bottom:-60px; left:-140px; width:420px; height:420px; background: radial-gradient(circle, rgba(147,165,253,.18), transparent 62%);" aria-hidden="true"></div>
-  <div class="sec-head">
-    <div class="sec-tag rv">FEATURES</div>
-    <h2 class="rv">为玩家而生的 Mod 工坊</h2>
-    <p class="sec-desc rv">技术的事交给 AI,你只负责提出想法。</p>
-  </div>
-  <div class="grid">
-    <div class="card rv">
-      <div class="ico">🗣️</div>
-      <h3>零门槛创作</h3>
-      <p>不需要编程,不需要看教程。会打字、会聊天,就会做 Mod。</p>
+<!-- ============ 工作方式:两栏 ============ -->
+<section id="how">
+  <div class="split">
+    <div class="txt">
+      <div class="sec-kicker rv">HOW IT WORKS</div>
+      <h2 class="rv">从一句话到在游戏里生效</h2>
+      <p class="lead rv">整个过程几分钟,之后就是和 AiMod 聊天这么简单。它负责读懂游戏、找到该动的地方,你只负责提出想法。</p>
+      <ul class="list">
+        <li class="rv"><span class="n">1</span><div><b>说出想法</b><p>像聊天一样,把想要的效果描述给 AiMod。</p></div></li>
+        <li class="rv d1"><span class="n">2</span><div><b>AI 制作</b><p>自动分析游戏结构,生成并接入你的 Mod。</p></div></li>
+        <li class="rv d2"><span class="n">3</span><div><b>进游戏体验</b><p>即时生效,不满意就继续说,一句一句打磨。</p></div></li>
+      </ul>
     </div>
-    <div class="card rv d1">
-      <div class="ico">⚡</div>
-      <h3>想法即刻生效</h3>
-      <p>描述完立刻在游戏里看到效果。Mod 从想法到上线,以分钟计而非以周计。</p>
-    </div>
-    <div class="card rv d2">
-      <div class="ico">🎮</div>
-      <h3>全引擎适配</h3>
-      <p>Unity 与虚幻引擎制作的游戏都能做 Mod,自动识别游戏类型,无需任何配置。</p>
-    </div>
-    <div class="card rv">
-      <div class="ico">🖼️</div>
-      <h3>界面增强类 Mod</h3>
-      <p>血条、信息面板、目标高亮……一句话,把想要的内容"画"在游戏画面上。</p>
-    </div>
-    <div class="card rv d1">
-      <div class="ico">🔁</div>
-      <h3>对话式打磨</h3>
-      <p>"再快一点""换个位置""换个颜色"——像改设计稿一样,一句话迭代你的 Mod。</p>
-    </div>
-    <div class="card rv d2">
-      <div class="ico">📦</div>
-      <h3>单文件即用</h3>
-      <p>全部能力集成在一个程序里,拷到任何电脑解压即用,不写注册表、不留垃圾文件。</p>
+    <div class="build rv d1">
+      <div class="build-bar"><i></i><i></i><i></i></div>
+      <div class="build-log" id="build-log"></div>
     </div>
   </div>
 </section>
 
-<!-- ============ 工作方式 ============ -->
-<section id="how">
-  <div class="p-orb" data-speed="0.2" style="top:120px; left:-120px; width:360px; height:360px; background: radial-gradient(circle, rgba(230,168,213,.14), transparent 62%);" aria-hidden="true"></div>
+<!-- ============ 特性 ============ -->
+<section id="features">
   <div class="sec-head">
-    <div class="sec-tag rv">HOW IT WORKS</div>
-    <h2 class="rv">三步做出你的 Mod</h2>
-    <p class="sec-desc rv">整个过程几分钟,之后就是和 AI 聊天这么简单。</p>
+    <div class="sec-kicker rv">FEATURES</div>
+    <h2 class="rv">为玩家而生的 Mod 工坊</h2>
+    <p class="sec-desc rv">技术的事交给 AI,你只负责提出想法。</p>
   </div>
-  <div class="steps">
-    <div class="step rv"><span class="ring"></span>
-      <div class="num">01</div>
-      <h3>说出想法</h3>
-      <p><em>"做一个让宝箱发光的 Mod"</em>——像聊天一样,把想要的效果描述给 AI。</p>
-    </div>
-    <div class="step rv d1"><span class="ring"></span>
-      <div class="num">02</div>
-      <h3>AI 制作</h3>
-      <p>AI 自动理解游戏的内部结构,找到该动的地方,把你的想法变成现实。</p>
-    </div>
-    <div class="step rv d2"><span class="ring"></span>
-      <div class="num">03</div>
-      <h3>进游戏体验</h3>
-      <p>Mod 即时生效。不满意就继续说,一句一句打磨,直到称心如意。</p>
-    </div>
+  <div class="engines">
+    <div class="engine rv"><span class="eg">🎮</span><b>全引擎适配</b><p>Unity 与虚幻引擎游戏都能做。</p></div>
+    <div class="engine rv d1"><span class="eg">🖼️</span><b>界面增强</b><p>血条、面板、目标高亮,一句话搞定。</p></div>
+    <div class="engine rv d2"><span class="eg">🔁</span><b>对话式打磨</b><p>像改设计稿一样,一句话迭代依赖。</p></div>
+    <div class="engine rv d3"><span class="eg">📦</span><b>单文件即用</b><p>拷走就玩,不写注册表、不留垃圾。</p></div>
+  </div>
+</section>
+
+<!-- ============ 用户心声 ============ -->
+<section id="love">
+  <div class="sec-head">
+    <div class="sec-kicker rv">WALL OF LOVE</div>
+    <h2 class="rv">玩家们的声音</h2>
+    <p class="sec-desc rv">从实用到趣味,玩法由你定义。</p>
+  </div>
+  <div class="love">
+    <div class="quote rv"><p class="q">「我不会写代码,但现在能给自己玩了三年的游戏做 Mod 了——只要说一句。」</p><div class="who"><span class="av">哲</span>阿哲 · 独立玩家</div></div>
+    <div class="quote rv d1"><p class="q">「一句话就让宝箱发光,真的像变魔术。改回血速度也只是随口一说。」</p><div class="who"><span class="av">L</span>Linnaaa · 内容创作者</div></div>
+    <div class="quote rv d2"><p class="q">「说是在做 Mod,其实更像在游戏里造独属于自己的玩法,而且立等可取。」</p><div class="who"><span class="av">周</span>老周 · 硬核玩家</div></div>
   </div>
 </section>
 
 <!-- ============ 玩法灵感 ============ -->
 <section id="scenarios">
-  <div class="p-orb" data-speed="0.24" style="bottom:-80px; right:-120px; width:400px; height:400px; background: radial-gradient(circle, rgba(147,165,253,.16), transparent 62%);" aria-hidden="true"></div>
   <div class="sec-head">
-    <div class="sec-tag rv">SCENARIOS</div>
+    <div class="sec-kicker rv">SCENARIOS</div>
     <h2 class="rv">玩家们的 Mod 灵感</h2>
     <p class="sec-desc rv">从实用到趣味,玩法由你定义。</p>
   </div>
-  <div class="scen">
-    <div class="s rv">
-      <span class="e">🗺️</span>
-      <h3>探索辅助</h3>
-      <p>宝箱、资源、目标高亮显示,再也不会错过任何角落。</p>
-    </div>
-    <div class="s rv d1">
-      <span class="e">🎚️</span>
-      <h3>难度定制</h3>
-      <p>敌人强度、资源产出、成长节奏,按你的喜好调整。</p>
-    </div>
-    <div class="s rv d2">
-      <span class="e">🖥️</span>
-      <h3>界面增强</h3>
-      <p>血条、状态、自定义面板,打造专属的游戏界面。</p>
-    </div>
-    <div class="s rv d3">
-      <span class="e">🎉</span>
-      <h3>趣味玩法</h3>
-      <p>自创规则与挑战玩法,和朋友分享你的奇思妙想。</p>
-    </div>
+  <div class="engines">
+    <div class="engine rv"><span class="eg">🗺️</span><b>探索辅助</b><p>宝箱、资源、目标高亮,不错过任何角落。</p></div>
+    <div class="engine rv d1"><span class="eg">🎚️</span><b>难度定制</b><p>敌人强度、资源产出,按你的喜好调整。</p></div>
+    <div class="engine rv d2"><span class="eg">🖥️</span><b>界面增强</b><p>血条、状态、自定义面板任你搭。</p></div>
+    <div class="engine rv d3"><span class="eg">🎉</span><b>趣味玩法</b><p>自创规则与挑战,和好友分享奇思妙想。</p></div>
   </div>
 </section>
 
+<!-- ============ CTA ============ -->
+<section id="start" class="cta-band">
+  <div class="sec-kicker rv">GET STARTED</div>
+  <h2 class="rv">现在就试试,做你的第一个 Mod</h2>
+  <p class="rv">免费 · 无需注册,打开就能体验。</p>
+  <div class="cta rv"><a class="btn btn-primary" href="#">开始使用</a></div>
+</section>
+
 <footer>
-  <div class="f-logo"><b>Ai</b>Mod</div>
-  <div class="copy">© 2026 AiMod · Powered by GitHub Pages</div>
+  <div class="foot-grid">
+    <div class="foot-brand">
+      <a class="logo" href="#"><b>A</b>iMod</a>
+      <p>会聊天,就能做 Mod。把想法说给 AI,它替你实现。</p>
+    </div>
+    <div class="foot-col">
+      <h4>产品</h4>
+      <a href="#features">特性</a>
+      <a href="#how">工作方式</a>
+      <a href="#scenarios">玩法灵感</a>
+    </div>
+    <div class="foot-col">
+      <h4>资源</h4>
+      <a href="#compare">了解新方式</a>
+      <a href="#love">玩家心声</a>
+      <a href="#start">开始使用</a>
+    </div>
+    <div class="foot-col">
+      <h4>社区</h4>
+      <a href="https://github.com/Eorrorload/AiMod" target="_blank" rel="noopener">GitHub</a>
+      <a href="#">更新日志</a>
+      <a href="#">提交反馈</a>
+    </div>
+    <div class="news">
+      <h4>订阅更新</h4>
+      <p>第一时间获取新引擎支持与玩法灵感。</p>
+      <div class="field"><input type="email" placeholder="you@email.com"><button>订阅</button></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 AiMod</span>
+    <a href="#">服务条款</a>
+    <a href="#">隐私政策</a>
+    <span class="sp">Powered by GitHub Pages</span>
+  </div>
 </footer>
 
 <script>
   document.documentElement.classList.add('js');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // 滚动渐显:元素进入视口才绽放(不再用定时器把所有内容一次性点亮,否则滚动时没有动画)
+  // 滚动渐显
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver(es => {
       es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } });
-    }, { threshold: .1, rootMargin: '0px 0px -6% 0px' });
+    }, { threshold: .1, rootMargin: '0px 0px -5% 0px' });
     document.querySelectorAll('.rv').forEach(el => io.observe(el));
   } else {
     document.querySelectorAll('.rv').forEach(el => el.classList.add('on'));
   }
 
-  // 导航栏滚动状态 + 顶部进度条 + 滚动视差
-  const navEl = document.querySelector('nav');
-  const bar = document.querySelector('.progress');
-  const auri = document.querySelector('.auri');
-  const pOrbs = [...document.querySelectorAll('.p-orb')];
-  const parallax = () => {
-    if (auri) auri.style.transform = `translateY(${scrollY * .22}px)`;
-    pOrbs.forEach(o => o.style.transform = `translateY(${scrollY * parseFloat(o.dataset.speed)}px)`);
-  };
-  addEventListener('scroll', () => {
-    navEl.classList.toggle('scrolled', scrollY > 12);
-    const max = document.documentElement.scrollHeight - innerHeight;
-    bar.style.width = (max > 0 ? (scrollY / max) * 100 : 0) + '%';
-    if (!reduced) parallax();
-  }, { passive: true });
+  // 导航滚动状态
+  const navEl = document.getElementById('nav');
+  addEventListener('scroll', () => navEl.classList.toggle('scrolled', scrollY > 8), { passive: true });
 
-  // 光标光晕 + 极光层鼠标视差
-  const glow = document.querySelector('.cursor-glow');
-  const blobs = [...document.querySelectorAll('.blob')];
-  let tx = 0, ty = 0, cx = 0, cy = 0, mx = 0, my = 0;
-  addEventListener('mousemove', e => {
-    tx = e.clientX; ty = e.clientY;
-    mx = (e.clientX / innerWidth - .5);
-    my = (e.clientY / innerHeight - .5);
-    if (glow) { glow.style.opacity = '1'; }
-  }, { passive: true });
-  (function animGlow() {
-    cx += (tx - cx) * .08; cy += (ty - cy) * .08;
-    if (glow) glow.style.transform = `translate(${cx - 210}px, ${cy - 210}px)`;
-    blobs.forEach(b => {
-      const d = parseFloat(b.dataset.depth);
-      b.style.transform = `translate(${mx * d * 60}px, ${my * d * 60}px)`;
-    });
-    requestAnimationFrame(animGlow);
-  })();
-
-  // 卡片 3D 倾斜 + 聚光灯跟随
-  document.querySelectorAll('.card').forEach(el => {
-    el.addEventListener('mousemove', e => {
-      const r = el.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-      el.style.setProperty('--mx', (px * 100) + '%');
-      el.style.setProperty('--my', (py * 100) + '%');
-      el.style.transform = `perspective(800px) rotateY(${(px - .5) * 10}deg) rotateX(${(.5 - py) * 10}deg)`;
-    });
-    el.addEventListener('mouseleave', () => { el.style.transform = ''; });
-  });
-
-  // 磁吸按钮
-  document.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('mousemove', e => {
-      const r = btn.getBoundingClientRect();
-      const x = (e.clientX - r.left - r.width / 2) / (r.width / 2);
-      const y = (e.clientY - r.top - r.height / 2) / (r.height / 2);
-      btn.style.transform = `translate(${x * 8}px, ${y * 8}px)`;
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.transition = 'transform .5s cubic-bezier(.16,1,.3,1)';
-      btn.style.transform = '';
-      setTimeout(() => btn.style.transition = '', 500);
-    });
-  });
-
-  // 数据条数字滚动
-  const seen = new IntersectionObserver(es => {
-    es.forEach(en => {
-      if (!en.isIntersecting) return;
-      seen.unobserve(en.target);
-      en.target.querySelectorAll('b[data-count]').forEach(b => {
-        const target = +b.dataset.count, t0 = performance.now(), dur = 1400;
-        (function tick(t) {
-          const p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(1 - p, 4);
-          b.textContent = Math.round(target * e);
-          if (p < 1) requestAnimationFrame(tick);
-        })(t0);
-      });
-    });
-  }, { threshold: .5 });
-  seen.observe(document.querySelector('.stats'));
-
-  // AI 控制台自动演示
-  const body = document.querySelector('.terminal-body');
-  const schedule = reduced ? null : [
-    { user: "做一个 Mod:让宝箱隔着墙也能发光可见" },
-    { tag: "透视", text: "已解析游戏场景,定位到宝箱材质层。正在注入高亮渲染……" },
-    { text: "宝箱透视 Mod 已完成,宝箱现在会透出金色轮廓,隔着墙也能一眼看到。", ok: " ✔ 已生效" },
-    { user: "太酷了!再把回血速度调慢一点,游戏太简单了" },
-    { text: "已读取回血逻辑,将速率参数调整为原值的 40%,挑战感立刻就上来了。", ok: " ✔ 已生效" },
-    { text: "还想调什么?直接说,我这就改。 " }
-  ];
-  if (reduced) {
-    const items = [
-      ["u", "做一个 Mod:让宝箱隔着墙也能发光可见"],
-      ["a", "宝箱透视 Mod 已完成,宝箱现在会透出金色轮廓,隔着墙也能一眼看到。 ✔ 已生效"],
-      ["u", "太酷了!再把回血速度调慢一点,游戏太简单了"],
-      ["a", "已将回血速度调整为原来的 40%,挑战感立刻就上来了。 ✔ 已生效"]
-    ];
-    body.innerHTML = items.map(([k, t]) =>
-      `<div class="${k === 'u' ? 't-user' : 't-ai'}">${t.replace(/</g, '&lt;')}</div>`).join('');
-  } else {
-    const dots = document.createElement('div');
-    dots.className = 't-dots'; dots.innerHTML = '<i></i><i></i><i></i>';
-    function addBubble(cls, text, extra) {
-      const div = document.createElement('div');
-      div.className = cls;
-      if (cls === 't-user') { div.textContent = text; }
-      else {
-        if (extra && extra.tag) { const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = extra.tag; div.appendChild(tag); }
-        div.appendChild(document.createTextNode(text));
-        if (extra && extra.ok) { const ok = document.createElement('span'); ok.className = 'ok'; ok.textContent = extra.ok; div.appendChild(ok); }
+  // hero 笔记网络(canvas,细微漂移)
+  (function net(w) {
+    const cv = document.getElementById('net');
+    if (!cv || reduced) return;
+    const ctx = cv.getContext('2d');
+    let W, H, pts = [];
+    const N = 34, R = 130;
+    function size() {
+      W = cv.width = cv.offsetWidth;
+      H = cv.height = cv.offsetHeight;
+      pts = Array.from({ length: N }, () => ({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - .5) * .16, vy: (Math.random() - .5) * .16
+      }));
+    }
+    size(); addEventListener('resize', size);
+    (function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of pts) {
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+        p.x += p.vx; p.y += p.vy;
       }
-      body.appendChild(div);
-    }
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-    async function typeIn(el, full) {
-      el.textContent = '';
-      for (let i = 0; i < full.length; i++) { el.textContent += full[i]; await sleep(16); }
-    }
-    async function run() {
-      body.innerHTML = '';
-      for (const s of schedule) {
-        if (s.user) {
-          const u = document.createElement('div'); u.className = 't-user'; body.appendChild(u);
-          await typeIn(u, s.user);
-          await sleep(420);
-        } else {
-          const a = document.createElement('div'); a.className = 't-ai'; body.appendChild(a);
-          a.appendChild(dots);
-          await sleep(820);
-          dots.remove();
-          if (s.tag) { const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = s.tag; a.appendChild(tag); }
-          const t = document.createElement('span'); a.appendChild(t);
-          await typeIn(t, s.text);
-          if (s.ok) { const ok = document.createElement('span'); ok.className = 'ok'; ok.textContent = s.ok; a.appendChild(ok); }
-          await sleep(s.ok ? 700 : 500);
+      for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+        const a = pts[i], b = pts[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
+        if (d < R) {
+          ctx.strokeStyle = 'rgba(154,143,251,' + (0.12 * (1 - d / R)) + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
         }
       }
-      await sleep(6000);
-      run();
+      for (const p of pts) {
+        ctx.fillStyle = 'rgba(154,143,251,.35)';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 1.6, 0, 7); ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    })();
+  })();
+
+  // AI 演示卡:逐字打字
+  (function aiDemo() {
+    const box = document.getElementById('ai-answer');
+    if (!box) return;
+    const lines = [
+      { text: '已分析场景,定位到宝箱材质层。', delay: 700 },
+      { text: '已生成「宝箱高亮」:宝箱会透出柔和边缘光,任意角度都能看见。', ok: true }
+    ];
+    if (reduced) {
+      box.innerHTML = lines.map(l => l.text + (l.ok ? '<span class="ok">已生效</span>' : '')).join('<br>');
+      return;
+    }
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    async function run() {
+      box.innerHTML = '';
+      for (const l of lines) {
+        await sleep(l.delay);
+        const dots = document.createElement('span');
+        dots.className = 'ai-dots'; dots.innerHTML = '<i></i><i></i><i></i>';
+        const line = document.createElement('div'); line.style.marginTop = '6px';
+        const t = document.createElement('span'); line.appendChild(dots);
+        box.appendChild(line);
+        await sleep(850); dots.remove();
+        for (let c = 0; c < l.text.length; c++) { t.textContent += l.text[c]; await sleep(15); }
+        if (l.ok) { const ok = document.createElement('span'); ok.className = 'ok'; ok.textContent = '已生效'; t.appendChild(ok); }
+        line.appendChild(t);
+      }
+      await sleep(6000); run();
     }
     run();
-  }
+  })();
 
-  // 工作台实时构建日志(参考 AI 编程代理演示)
-  const wsLog = document.querySelector('.ws-log-inner');
-  const wsSteps = [...document.querySelectorAll('.ws-goal li')];
-  const wsLive = document.querySelector('.ws-live');
-  const wsSeq = [
-    { pre: '§', text: '分析场景:定位宝箱资源与材质层', ms: 900, step: 0 },
-    { pre: '§', text: '生成 宝箱高亮.lua', chip: '+26', ms: 720, ok: true, step: 1 },
-    { pre: '✓', text: '校验 宝箱高亮.lua · 0 error', ms: 640, ok: true },
-    { pre: '§', text: '注入 场景配置 scene.json', chip: '+12', ms: 720, step: 2 },
-    { pre: '✓', text: '已生效 · 执行 6 秒 · 3 文件变更', ms: 420, done: true }
-  ];
-  function wsLine(dest, o) {
-    const line = document.createElement('div');
-    line.className = 'ws-line' + (o.ok ? ' ok' : '') + (o.done ? ' done' : '') + (o.pre === '§' ? ' cm' : '');
-    line.innerHTML = `<span class="pre">${o.pre}</span><span>${o.text}</span>` + (o.chip ? `<span class="chip">${o.chip}</span>` : '');
-    dest.insertBefore(line, wsLive);
-    requestAnimationFrame(() => requestAnimationFrame(() => line.classList.add('on')));
-  }
-  async function runWS() {
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-    wsSteps.forEach(s => s.classList.remove('ok'));
-    wsLog.querySelectorAll('.ws-line').forEach(l => l.remove());
-    wsLive.style.display = 'inline-flex';
-    for (const o of wsSeq) {
-      wsStepMark(o.step);
-      wsLine(wsLog, o);
-      await sleep(o.ms);
+  // 构建过程 mock
+  (function build() {
+    const log = document.getElementById('build-log');
+    if (!log) return;
+    const seq = [
+      { pre: '§', text: '分析场景,定位宝箱资源与材质层', ms: 700 },
+      { pre: '§', text: '生成 宝箱高亮.lua', chip: '+26', ms: 650 },
+      { pre: '✓', text: '校验 宝箱高亮.lua · 0 error', ms: 600, ok: true },
+      { pre: '§', text: '注入 场景配置 scene.json', chip: '+12', ms: 650 },
+      { pre: '✓', text: '已生效 · 执行 6 秒 · 3 文件变更', ms: 380, done: true }
+    ];
+    if (reduced) {
+      log.innerHTML = seq.map(s => `<div class="build-line on"><span class="pre">${s.pre}</span><span>${s.text}</span></div>`).join('');
+      return;
     }
-    wsLive.style.display = 'none';
-    await sleep(3600);
-    runWS();
-  }
-  function wsStepMark(i) { if (i != null) wsSteps[i].classList.add('ok'); }
-  if (reduced) {
-    wsSteps.forEach((s, i) => { if (i < 2) s.classList.add('ok'); });
-    if (wsLive) wsLive.style.display = 'none';
-  } else if (wsLog) {
-    runWS();
-  }
+    const slide = document.createElement('div');
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    function add(s) {
+      const d = document.createElement('div');
+      d.className = 'build-line' + (s.ok ? ' ok' : '') + (s.done ? ' done' : '');
+      d.innerHTML = `<span class="pre">${s.pre}</span><span>${s.text}</span>` + (s.chip ? `<span class="chip">${s.chip}</span>` : '');
+      log.appendChild(d);
+      requestAnimationFrame(() => requestAnimationFrame(() => d.classList.add('on')));
+    }
+    async function run() {
+      log.innerHTML = '';
+      slide.className = 'build-dots'; slide.innerHTML = '<i></i><i></i><i></i>';
+      for (const s of seq) { add(s); await sleep(s.ms); }
+      await sleep(3400); run();
+    }
+    log.appendChild(slide); run();
+  })();
 </script>
 </body>
 </html>
